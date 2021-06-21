@@ -4,7 +4,7 @@ import { Form, Button, Grid, Label, Segment, Message } from 'semantic-ui-react';
 
 // style={{color: "white", backgroundColor: "#2d8a1d"}}
 
-const Login = ({setAuth}) => {
+const Login = () => {
 
   // Form Input Variables
   const [email, setEmail] = useState("");
