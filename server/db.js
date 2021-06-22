@@ -2,7 +2,16 @@ require("dotenv").config();
 
 const { Pool } = require("pg");
 
+/*
+ * DO NOT NEED TO CONFIGURE POOL SINCE pg
+ * AUTOMATICALLY TAKES THESE FROM THE
+ * ENVIRONMENT VARIABLES
+ */
+
 const pool = new Pool();
+
+module.exports = { query: (text, params) => pool.query(text, params) };
+
 
 /*
 {
@@ -14,11 +23,7 @@ port: 5432
 }
 */
 
-/*
- * DO NOT NEED TO CONFIGURE POOL SINCE pg
- * AUTOMATICALLY TAKES THESE FROM THE
- * ENVIRONMENT VARIABLES
- */
+
 
 /* FOR PRODUCTION PURPOSES */
 
@@ -29,4 +34,4 @@ port: 5432
 //   connectionString: isProduction ? process.env.DATABASE_URL : connectionString,
 // });
 
-module.exports = { query: (text, params) => pool.query(text, params) };
+

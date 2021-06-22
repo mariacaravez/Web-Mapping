@@ -59,7 +59,7 @@ router.get("/api/login", (req, res) => {
 
 router.post("/api/login", (req, res) => {
 
-  console.log("Logging in user...")
+  console.log("Logging in user...");
 
   const email = req.body.email;
   const password = req.body.password;

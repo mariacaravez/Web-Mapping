@@ -17,6 +17,7 @@ app.use(
     credentials: true,
   })
 );
+
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json);
 
@@ -38,10 +39,10 @@ app.use(
 app.use("authentication", require("./routes/authentication"));
 
 // Serves static pages
-app.use("/", express.static(path.join(__dirname, "/public/index.html")));
+app.use("/", express.static(path.join(__dirname, "build")));
 
-app.get("/", (req, res) => {
-  res.send("HELLO WORLD!");
+app.get("/*", (req, res) => {
+  res.sendFile(path.join(_dirname, "build", "index.html"))
 });
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

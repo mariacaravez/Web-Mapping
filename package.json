@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "axios": "^0.21.1",
+    "env-cmd": "^10.1.0",
     "mapbox-gl": "^2.3.0",
     "mapbox-gl-controls": "^2.3.1",
     "nodemon": "^2.0.7",
@@ -17,7 +18,8 @@
   },
   "scripts": {
     "start": "react-dotenv && react-scripts start",
-    "build": "react-dotenv && react-scripts build"
+    "build": "react-dotenv && react-scripts build",
+    "build:staging": "env-cmd -f .env.staging npm run build"
   },
   "eslintConfig": {
     "extends": [
