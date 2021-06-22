@@ -1,3 +1,8 @@
 import axios from "axios";
 
-export default axios.create({ baseURL: "http://localhost:3001/api"})
+const baseURL =
+  process.env.NODE_ENV === "production"
+    ? "api/v1/restaurants"
+    : "http://localhost:3001/api";
+
+export default axios.create({ baseURL });

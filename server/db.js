@@ -2,13 +2,7 @@ require("dotenv").config();
 
 const { Pool } = require("pg");
 
-const pool = new Pool({
-  user: "ubuntu",
-  host: "localhost",
-  database: "cmwa_db",
-  password: "cwma@DM21",
-  port: 5432,
-});
+const pool = new Pool();
 
 /*
 {

@@ -5,15 +5,13 @@
  */
 
 // Imports include libraries/dependencies/packages that we use in our application.
-import React, { useContext } from "react";
-import { Fragment, useState, useEffect } from "react";
+import React from "react";
+import { Fragment, useEffect, useState } from "react";
 import Axios from "./Axios";
 import {
   BrowserRouter as Router,
   Route,
   Switch,
-  Redirect,
-  useHistory,
 } from "react-router-dom";
 
 // All other components in our application
@@ -22,28 +20,23 @@ import SignUp from "./components/SignUp";
 import Login from "./components/Login";
 import Profile from "./components/Profile";
 import NavBar from "./components/NavBar";
-import { Context, ContextProvider } from "./Context";
 
 /* Application Begins Here */
-export default function App(props) {
+export default function App() {
 
-  // const [isAuthenticated, setIsAuthenticated] = useContext(Context);
-  // let history = useHistory();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // const fetchData = async () => {
-  //   try {
-  //     const response = await Axios.get("/");
-  //     console.log(response.data);
-  //   } catch (err) {}
-  // };
-  
-  // useEffect(() => {
-  //   fetchData();
-  // }, []);
+  Axios.defaults.withCredentials = true;
 
-  // Routing & UI Begins Here
+  useEffect(() => {
+    Axios.get("/login").then((response) => {
+      if(response.data.loggedIn === true){
+        setIsLoggedIn(response.data.user[0].firstname)
+      }
+    })
+  })
+
   return (
-    <ContextProvider>
       <Router>
         <Fragment>
           <Route exact path="/">
@@ -64,6 +57,5 @@ export default function App(props) {
           </Switch>
         </Fragment>
       </Router>
-    </ContextProvider>
   );
 }

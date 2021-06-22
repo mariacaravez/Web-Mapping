@@ -12,6 +12,7 @@ export const ContextProvider = (props) => {
 
     /* React Hooks Begins Here (https://reactjs.org/docs/hooks-intro.html) */
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   return (
     <Context.Provider value={(isAuthenticated, setIsAuthenticated)}>

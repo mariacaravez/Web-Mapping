@@ -1,25 +1,11 @@
 import React from "react";
-import { useState, useContext } from "react";
-import {
-  Form,
-  Button,
-  Grid,
-  Label,
-  Segment,
-} from "semantic-ui-react";
+import { useState } from "react";
+import { Form, Button, Grid, Label, Segment, Message } from "semantic-ui-react";
 import Axios from "../Axios";
-// import {toast} from "react-toastify"
-
-import { Context, ContextProvider } from "../Context";
-
 
 // style={{color: "white", backgroundColor: "#3a7dcf"}}
 
-const SignUp = (props) => {
-
-  const [isAuthenticated, setIsAuthenticated] = useContext(Context);
-
-
+const SignUp = () => {
   const [firstname, setFirstname] = useState("");
   const [lastname, setLastname] = useState("");
   const [email, setEmail] = useState("");
@@ -27,35 +13,21 @@ const SignUp = (props) => {
   const [password, setPassword] = useState("");
   const [c_password, setC_Password] = useState("");
 
-  const submitSignUp = async (e) => {
-    e.preventDefault();
-    try {
-
-      const response = await Axios.post("/new-user", {
-        firstname,
-        lastname,
-        email,
-        password,
-      });
-
-      if(response.jwtToken){
-        localStorage.setItem("token", response.jwtToken);
-        setIsAuthenticated(true);
-        console.log("Sign Up Successful!");
-        console.log(response);
-      }
-      else{
-        setIsAuthenticated(false);
-        console.log("Sign Up Failed.")
-      }
-    } catch (err) {
-      console.error(err.message);
-    }
+  const submitSignUp = () => {
+    console.log("button clicked")
+    Axios.post("/new-user", {
+      firstname,
+      lastname,
+      email,
+      password,
+    }).then((response) => {
+      console.log(response);
+    })
   };
 
   return (
     <div className="alignment">
-      <Grid padded="very">
+      <Grid>
         <Segment>
           <Label
             style={{ color: "white", backgroundColor: "#3a7dcf" }}
