@@ -1,6 +1,7 @@
 /*
- * Global states of variables within application
- *
+ * "Context is designed to share data that can be 
+ * considered “global” for a tree of React components, 
+ * such as the current authenticated user..."
  */
 
 import React, { useState, createContext } from "react";

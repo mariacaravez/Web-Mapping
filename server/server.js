@@ -24,8 +24,6 @@ app.use(session({
   }
 }))
 
-  
-
 /* ROUTES */
 
 app.use("authentication", require("./routes/authentication"));
@@ -35,6 +33,15 @@ app.use("/", express.static(path.join(__dirname, "/public/index.html")));
 
 app.get("/", (req, res) => {
   res.send("HELLO WORLD!");
+});
+
+app.get("/api/login", (req, res) => {
+  if(req.session.user){
+    res.send({loggedIn: true, user: req.session.user});
+  }
+  else{
+    res.send({loggedIn: false});
+  }
 });
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

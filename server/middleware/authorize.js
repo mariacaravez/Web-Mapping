@@ -5,17 +5,26 @@ require("dotenv").config();
 
 module.exports = function(req, res, next) {
   // Get token from header
-  const token = req.header("jwt_token");
+  // Original: // const token = req.header("jwt_token");
+  // const token = req.headers["x-access-token"];
 
   // Check if not token
   if (!token) {
-    return res.status(403).json({ msg: "authorization denied" });
+    return res.status(403).json({ msg: "Authorization Denied." });
   }
 
   // Verify token
   try {
     //it is going to give use the user id (user:{id: user.id})
-    const verify = jwt.verify(token, process.env.JWT_SECRET);
+    const verify = jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if(err){
+        res.json({auth: false, message: "You are not authenticated."})
+      }
+      else{
+        req.userid = decoded.id;
+      }
+    });
+  
 
     req.user = verify.user;
     next();

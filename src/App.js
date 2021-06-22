@@ -5,7 +5,7 @@
  */
 
 // Imports include libraries/dependencies/packages that we use in our application.
-import React from "react";
+import React, { useContext } from "react";
 import { Fragment, useState, useEffect } from "react";
 import Axios from "./Axios";
 import {
@@ -13,6 +13,7 @@ import {
   Route,
   Switch,
   Redirect,
+  useHistory,
 } from "react-router-dom";
 
 // All other components in our application
@@ -21,21 +22,24 @@ import SignUp from "./components/SignUp";
 import Login from "./components/Login";
 import Profile from "./components/Profile";
 import NavBar from "./components/NavBar";
-import { ContextProvider } from "./Context";
+import { Context, ContextProvider } from "./Context";
 
 /* Application Begins Here */
-export default function App() {
+export default function App(props) {
 
-  const fetchData = async () => {
-    try {
-      const response = await Axios.get("/");
-      console.log(response);
-    } catch (err) {}
-  };
+  // const [isAuthenticated, setIsAuthenticated] = useContext(Context);
+  // let history = useHistory();
+
+  // const fetchData = async () => {
+  //   try {
+  //     const response = await Axios.get("/");
+  //     console.log(response.data);
+  //   } catch (err) {}
+  // };
   
-  useEffect(() => {
-    fetchData();
-  }, []);
+  // useEffect(() => {
+  //   fetchData();
+  // }, []);
 
   // Routing & UI Begins Here
   return (
