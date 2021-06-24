@@ -1,6 +1,6 @@
 import React from "react";
 import { useState } from "react";
-import { Form, Button, Grid, Label, Segment, Message } from "semantic-ui-react";
+import { Form, Button, Grid, Label, Segment } from "semantic-ui-react";
 import Axios from "../Axios";
 
 // style={{color: "white", backgroundColor: "#3a7dcf"}}

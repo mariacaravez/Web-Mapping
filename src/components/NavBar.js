@@ -1,14 +1,9 @@
-import React, { useState, Component } from "react";
+import React, { useState } from "react";
 import { Menu, Button, Modal, Dropdown } from "semantic-ui-react";
-import { Link, Route } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import SignUp from "./SignUp";
 import Login from "./Login";
-import Profile from "./Profile";
-
-// Redux imports
-// import { useSelector, useDispatch } from 'react-redux';
-// import { authActions } from './store/auth-slice';
 
 const NavBar = () => {
   const [openRegister, setOpenRegister] = useState(false);
@@ -16,12 +11,10 @@ const NavBar = () => {
 
   // using global state to check if user logged in
   const isLoggedIn = false;
-  // const isLoggedIn = useSelector(state => state.auth.isLogged);
-  // so we can use dispatch
-  // const dispatch = useDispatch();
+
 
   const logoutHandler = () => {
-    //   dispatch(authActions.logout());
+    console.log("Logout clicked.")
   };
 
   return (
