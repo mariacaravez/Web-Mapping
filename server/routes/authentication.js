@@ -13,39 +13,55 @@ const authorize = require("../middleware/authorize");
 
 /* Create New User */
 
-router.post("/api/new-user", validate, (req, res) => {
-  console.log("creating new user...");
-
-  // Create object from request body
-  // const { firstname, lastname, email, password } = req.body;
-  const firstname = req.body.firstname;
-  const lastname = req.body.lastname;
-  const email = req.body.email;
-  const password = req.body.password;
-
-  // Check whether user exists
-  db.query("SELECT * FROM users WHERE email = $1", [email], (err, result) => {
-    console.log(err);
+router.post("/api/new-user", validate, async (req, res) => {
+    console.log("* NEW-USER BEGINS *\n")
+    const { firstname, lastname, email, password } = req.body;
+  
+    console.log("Received Request for user: ", firstname, lastname, email, password);
+  
+    try {
+      // TESTING
+      console.log("Checking DB for email...\n")
+  
+      const user = await db.query("SELECT * FROM users WHERE email = $1", [
+        email
+      ]);
+  
+      if (user.rows.length > 0) {
+  
+        // TESTING
+        console.log("User in table...\n")
+  
+        return res.status(401).json("User already exist!");
+      }
+      // TESTING
+      console.log("Creating encrypted password...\n")
+  
+      const salt = await bcrypt.genSalt(10);
+      const bcryptPassword = await bcrypt.hash(password, salt);
+  
+      // TESTING
+      console.log("Inserting user into query...\n")
+  
+      let newUser = await db.query(
+        "INSERT INTO users (firstname, lastname, email, password) VALUES ($1, $2, $3, $4) RETURNING *",
+        [firstname, lastname, email, bcryptPassword]
+      );
+      // TESTING
+      console.log("New user was made: ", newUser);
+  
+      // TESTING
+      console.log("Creating token...\n");
+  
+      const jwtToken = jwtGenerator(newUser.rows[0].user_id);
+      // TESTING
+      console.log("* NEW-USER ENDS *")
+      return res.json({ jwtToken });
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send("Server error");
+    }
   });
-  // Reject request if user exists
-  if (user.rows.length > 0) {
-    res.status(401).json("User already exists!");
-  }
-
-  // Encrypt user password
-  const salt = bcrypt.genSalt(10);
-  const bcryptPassword = bcrypt.hash(password, salt);
-
-  // Insert user into database with encrypted password
-  let newUser = db.query(
-    "INSERT INTO users(firstname, lastname, email, password) VALUES ($1, $2, $3, $4) RETURNING userid, password",
-    [firstname, lastname, email, bcryptPassword]
-  );
-  // Create token for user
-  const jwtToken = tokenGenerator(newUser.rows[0].userid);
-
-  res.json({ jwtToken });
-});
 
 /* Login User */
 

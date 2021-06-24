@@ -8,9 +8,9 @@ const { Pool } = require("pg");
  * ENVIRONMENT VARIABLES
  */
 
-const pool = new Pool();
+const db = new Pool();
 
-module.exports = { query: (text, params) => pool.query(text, params) };
+module.exports = { query: (text, params) => db.query(text, params) };
 
 
 /*
