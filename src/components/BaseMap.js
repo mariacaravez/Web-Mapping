@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import env from "react-dotenv";
 import mapboxgl from "!mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
 
+//"pk.eyJ1IjoidGltd2lsbGFlcnQiLCJhIjoiY2s1d2l0Ym5yMDlhdTNobnhhaDNsY2hwYSJ9.oVOhCQf5j61IBbpYvhzLwA";
 mapboxgl.accessToken = env.MB_TOKEN;
 
 

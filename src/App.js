@@ -6,8 +6,7 @@
 
 // Imports include libraries/dependencies/packages that we use in our application.
 import React from "react";
-import { Fragment, useEffect, useState } from "react";
-import Axios from "./Axios";
+import { Fragment,  useState } from "react";
 import {
   BrowserRouter as Router,
   Route,
@@ -16,8 +15,6 @@ import {
 
 // All other components in our application
 import BaseMap from "./components/BaseMap";
-import SignUp from "./components/SignUp";
-import Login from "./components/Login";
 import Profile from "./components/Profile";
 import NavBar from "./components/NavBar";
 
@@ -25,16 +22,6 @@ import NavBar from "./components/NavBar";
 export default function App() {
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  Axios.defaults.withCredentials = true;
-
-  useEffect(() => {
-    Axios.get("/login").then((response) => {
-      if(response.data.loggedIn === true){
-        setIsLoggedIn(response.data.user[0].firstname)
-      }
-    })
-  })
 
   return (
       <Router>
@@ -45,12 +32,6 @@ export default function App() {
           </Route>
 
           <Switch>
-            <Route exact path="/sign-up">
-              <SignUp />
-            </Route>
-            <Route exact path="/login">
-              <Login />
-            </Route>
             <Route exact path="/profile">
               <Profile />
             </Route>

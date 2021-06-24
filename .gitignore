@@ -1,8 +1,3 @@
 /node_modules
-/out
 /.vscode
 /.env
-/server/node_modules
-/public/env.js
-/src/Context.js
-/passport.js
