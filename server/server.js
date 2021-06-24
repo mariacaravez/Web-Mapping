@@ -94,6 +94,44 @@ app.post("/api/new-user", validate, async (req, res) => {
   }
 });
 
+app.post("/api/login", validate, async (req, res) => {
+
+  console.log("\n*** LOGIN API BEGINS *** \nLogging in user...\n");
+
+  const { email, password } = req.body;
+  console.log("Credentials received: Email:", email, "Password: ", password);
+
+  try {
+    console.log("\nChecking Database for email...\n");
+    const user = await db.query("SELECT * FROM users WHERE email = $1", [
+      email
+    ]);
+
+    if (user.rows.length === 0) {
+      console.log("Didn't find email.\n")
+      return res.status(401).json("Invalid Credential");
+    }
+
+    console.log("Email found. Encrypting password...")
+    const validPassword = await bcrypt.compare(
+      password,
+      user.rows[0].password
+    );
+
+    if (!validPassword) {
+      console.log("Invalid password from user.\n")
+      return res.status(401).json("Invalid Credential");
+    }
+
+    console.log("Valid Password. Creating token for user...")
+    const jwtToken = jwtGenerator(user.rows[0].userid);
+    console.log("Token created.\n *** LOGIN API ENDS ***")
+    return res.json({ jwtToken });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+});
 // app.get("/*", (req, res) => {
 //   res.sendFile(path.join(_dirname, "build", "index.html"))
 // });
