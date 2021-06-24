@@ -28,7 +28,6 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   session({
-    key: "userid",
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
@@ -40,60 +39,60 @@ app.use(
 );
 
 /* ROUTES */
-app.use("authentication", require("./routes/authentication"));
+// app.use("authentication", require("./routes/authentication"));
 
 // Serves static pages
 app.use("/", express.static(path.join(__dirname, "index.html")));
 
-// app.post("/api/new-user", validate, async (req, res) => {
-//   console.log("* NEW-USER BEGINS *\n")
-//   const { firstname, lastname, email, password } = req.body;
+app.post("/api/new-user", validate, async (req, res) => {
+  console.log("* NEW-USER BEGINS *\n")
+  const { firstname, lastname, email, password } = req.body;
 
-//   console.log("Received Request for user: ", firstname, lastname, email, password);
+  console.log("Received Request for user: ", firstname, lastname, email, password);
 
-//   try {
-//     // TESTING
-//     console.log("Checking DB for email...\n")
+  try {
+    // TESTING
+    console.log("Checking DB for email...\n")
 
-//     const user = await db.query("SELECT * FROM users WHERE email = $1", [
-//       email
-//     ]);
+    const user = await db.query("SELECT * FROM users WHERE email = $1", [
+      email
+    ]);
 
-//     if (user.rows.length > 0) {
+    if (user.rows.length > 0) {
 
-//       // TESTING
-//       console.log("User in table...\n")
+      // TESTING
+      console.log("User in table...\n")
 
-//       return res.status(401).json("User already exist!");
-//     }
-//     // TESTING
-//     console.log("Creating encrypted password...\n")
+      return res.status(401).json("User already exist!");
+    }
+    // TESTING
+    console.log("Creating encrypted password...\n")
 
-//     const salt = await bcrypt.genSalt(10);
-//     const bcryptPassword = await bcrypt.hash(password, salt);
+    const salt = await bcrypt.genSalt(10);
+    const bcryptPassword = await bcrypt.hash(password, salt);
 
-//     // TESTING
-//     console.log("Inserting user into query...\n")
+    // TESTING
+    console.log("Inserting user into query...\n")
 
-//     let newUser = await db.query(
-//       "INSERT INTO users (firstname, lastname, email, password) VALUES ($1, $2, $3, $4) RETURNING *",
-//       [firstname, lastname, email, bcryptPassword]
-//     );
-//     // TESTING
-//     console.log("New user was made: ", newUser);
+    let newUser = await db.query(
+      "INSERT INTO users (firstname, lastname, email, password) VALUES ($1, $2, $3, $4) RETURNING *",
+      [firstname, lastname, email, bcryptPassword]
+    );
+    // TESTING
+    console.log("New user was made: ", newUser);
 
-//     // TESTING
-//     console.log("Creating token...\n");
+    // TESTING
+    console.log("Creating token...\n");
 
-//     const jwtToken = jwtGenerator(newUser.rows[0].user_id);
-//     // TESTING
-//     console.log("* NEW-USER ENDS *")
-//     return res.json({ jwtToken });
-//   } catch (err) {
-//     console.error(err.message);
-//     res.status(500).send("Server error");
-//   }
-// });
+    const jwtToken = jwtGenerator(newUser.rows[0].user_id);
+    // TESTING
+    console.log("* NEW-USER ENDS *")
+    return res.json({ jwtToken });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+});
 
 // app.get("/*", (req, res) => {
 //   res.sendFile(path.join(_dirname, "build", "index.html"))
