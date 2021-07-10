@@ -5,46 +5,77 @@
 import React, { useRef, useEffect, useState } from "react";
 import env from "react-dotenv";
 import mapboxgl from "!mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
+import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
+import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 import { useDispatch, useSelector } from "react-redux";
-import { Button, Input, Label, Form, Icon } from "semantic-ui-react";
+import {
+  Button,
+  Input,
+  Form,
+  Icon,
+  Segment,
+  Modal,
+  Container,
+  Grid,
+  Label,
+  List,
+} from "semantic-ui-react";
+import { setLat, setLng, setZoom } from "../../mapSlice";
+import Dashboard from "../Dashboard";
 
 //"pk.eyJ1IjoidGltd2lsbGFlcnQiLCJhIjoiY2s1d2l0Ym5yMDlhdTNobnhhaDNsY2hwYSJ9.oVOhCQf5j61IBbpYvhzLwA";
 mapboxgl.accessToken = env.MB_TOKEN;
 
+// const geocoder = new MapboxGeocoder({
+//   accessToken: mapboxgl.accessToken,
+//   mapboxgl: mapboxgl,
+// });
+
 const MapBoxBase = () => {
+  const dispatch = useDispatch();
+
   const mapContainer = useRef(null);
   const map = useRef(null);
-
-  const [lngField, setLngField] = useState(-74.5);
-  const [latField, setLatField] = useState(40);
-  const [zoomField, setZoomField] = useState(2);
 
   const lng = useSelector((state) => state.mapInfo.lng);
   const lat = useSelector((state) => state.mapInfo.lat);
   const zoom = useSelector((state) => state.mapInfo.zoom);
 
-  useEffect(() => {
-    setLngField(lng);
-  }, [lng]);
+  const [lngField, setLngField] = useState(lng);
+  const [latField, setLatField] = useState(lat);
+  const [zoomField, setZoomField] = useState(zoom);
 
-  useEffect(() => {
-    setLatField(lat);
-  }, [lat]);
+  const [openDashboard, setOpenDashboard] = useState(false);
 
-  useEffect(() => {
-    setZoomField(zoom);
-  }, [zoom]);
+  const handleDashboard = (modal) => {
+    setOpenDashboard(modal);
+  };
+
+  // useEffect(() => {
+  //   setLngField(lng);
+  // }, [lng]);
+
+  // useEffect(() => {
+  //   setLatField(lat);
+  // }, [lat]);
+
+  // useEffect(() => {
+  //   setZoomField(zoom);
+  // }, [zoom]);
 
   const handleLng = (e, { value }) => {
     setLngField(value);
+    // dispatch(setLng(lngField));
   };
 
   const handleLat = (e, { value }) => {
     setLatField(value);
+    // dispatch(setLat(latField));
   };
 
   const handleZoom = (e, { value }) => {
     setZoomField(value);
+    // dispatch(setZoom(zoomField));
   };
 
   useEffect(() => {
@@ -52,8 +83,8 @@ const MapBoxBase = () => {
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/satellite-v9",
-      center: [lng, lat],
-      zoom: zoom,
+      center: [lngField, latField],
+      zoom: zoomField,
     });
 
     // Add zoom +/- controls
@@ -68,22 +99,42 @@ const MapBoxBase = () => {
       setLatField(map.current.getCenter().lat.toFixed(4));
       setZoomField(map.current.getZoom().toFixed(2));
     });
+    // geocoder.mapboxClient.geocodeReverse(
+    //   {
+    //     latitude: latField,
+    //     longitude: lngField,
+    //   },
+    //   function (err, res) {
+    //     console.log(err, res);
+    //   }
+    // );
   });
-
-  // useEffect(() => {
-  //   if (!map.current) return; //
-  //   map.current.on("move", () => {
-  //     handleLng(map.current.getCenter().lng.toFixed(4));
-  //     handleLat(map.current.getCenter().lat.toFixed(4));
-  //     handleZoom(map.current.getZoom().toFixed(2));
-  //   });
-  // });
-
   const setAoI = () => {
-    map.current.fitBounds([
-      [32.958984, -5.353521], // southwestern corner of the bounds
-      [43.50585, 5.615985] // northeastern corner of the bounds
-      ]);
+    map.current.flyTo({
+      center: [lngField, latField],
+      zoom: zoomField,
+      essential: true, // this animation is considered essential with respect to prefers-reduced-motion
+    });
+
+    // dispatch(setLat(latField));
+    // dispatch(setLng(lngField));
+    // dispatch(setZoom(zoomField));
+
+    // console.log("latField: ", latField);
+    // console.log("lat: ", lat);
+    // console.log("lngField: ", lngField);
+    // console.log("lng: ", lng);
+    // console.log("zoomField: ", zoomField);
+    // console.log("zoom: ", zoom);
+  };
+
+  const moveSlider = (e, { value }) => {
+    setZoomField(value);
+    map.current.flyTo({
+      center: [lngField, latField],
+      zoom: value,
+      essential: true,
+    });
   };
 
   return (
@@ -91,24 +142,23 @@ const MapBoxBase = () => {
       <div ref={mapContainer} className="map-container">
         <Form
           onSubmit={setAoI}
-          style={{ maxWidth: "50%" }}
           className="coordinates onMap"
-          style={{ top: "1vh", left: "1vw" }}
+          style={{ maxWidth: "50%", top: "1vh", left: "1vw" }}
           label="Area of Interest"
         >
+          {/* Area of Interest Input Fields Begins */}
           <Form.Group>
             <Form.Field>
               <Input
                 label={{ basic: true, content: "Longitude" }}
                 focus
                 type="number"
-                step="0.0001"
+                step="0.000001"
                 min="-180"
                 max="180"
                 size="small"
                 placeholder="-74.5"
                 value={lngField}
-                // defaultValue={lng}
                 onChange={handleLng}
               />
             </Form.Field>
@@ -118,13 +168,12 @@ const MapBoxBase = () => {
                 label={{ basic: true, content: "Latitude" }}
                 focus
                 type="number"
-                step="0.0001"
+                step="0.000001"
                 min="-90"
                 max="90"
                 size="small"
                 placeholder="40"
                 value={latField}
-                // defaultValue={lat}
                 onChange={handleLat}
               />
             </Form.Field>
@@ -133,25 +182,57 @@ const MapBoxBase = () => {
                 label={{ basic: true, content: "Zoom" }}
                 focus
                 type="number"
-                step="0.000001"
+                step="0.01"
                 min="1"
                 max="22"
                 size="small"
                 placeholder="17"
-                // defaultValue={zoom}
                 value={zoomField}
                 onChange={handleZoom}
               />
             </Form.Field>
-            <Button
-              // className="onMap"
-              color="green"
-              type="submit"
-            >
-              Extent Example
+            {/* Area of Interest Input Fields Ends */}
+
+            <Button color="green" type="submit">
+              Set AoI
             </Button>
+
+            {/* Dashboard Begins */}
+            <Modal
+              className="dashboard"
+              basic
+              dimmer="inverted"
+              onClose={() => setOpenDashboard(false)}
+              onOpen={() => setOpenDashboard(true)}
+              open={openDashboard}
+              trigger={<Button color="yellow">Dashboard</Button>}
+              size="mini"
+              className="alignment"
+            >
+              <Container>
+                <Segment size="small" padded>
+                  <Grid>
+                    <Grid.Column>
+                      <Dashboard />
+                    </Grid.Column>
+                  </Grid>
+                </Segment>
+              </Container>
+
+              <Modal.Actions className="alignment">
+                <Button
+                  color="black"
+                  size="tiny"
+                  onClick={() => setOpenDashboard(false)}
+                >
+                  Cancel
+                </Button>
+              </Modal.Actions>
+            </Modal>
+            {/* Dashboard Ends */}
           </Form.Group>
         </Form>
+
         {/* Slider Begins */}
         <Input
           className="slider"
@@ -159,11 +240,11 @@ const MapBoxBase = () => {
           min="1"
           max="22"
           value={zoomField}
-          onChange={handleZoom}
+          onChange={moveSlider}
         >
-          <Icon circular inverted name="minus" value={zoomField} />
+          <Icon circular inverted name="minus" />
           <input />
-          <Icon circular inverted name="plus" value={zoomField} />
+          <Icon circular inverted name="plus" />
         </Input>
         {/* Slider Ends */}
       </div>
