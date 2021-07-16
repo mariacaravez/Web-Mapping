@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@mapbox/mapbox-gl-geocoder": "^4.7.1",
+    "@mapbox/mapbox-sdk": "^0.13.0",
     "@reduxjs/toolkit": "^1.6.0",
     "axios": "^0.21.1",
     "bingmaps-react": "^1.1.0",

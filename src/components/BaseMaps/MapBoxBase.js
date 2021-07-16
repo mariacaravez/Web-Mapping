@@ -1,12 +1,10 @@
 /*
  * Base Map #1
+ * Coordinates to test: 37.4848 N, 122.2281 W
  */
-
 import React, { useRef, useEffect, useState } from "react";
 import env from "react-dotenv";
 import mapboxgl from "!mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
-import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
-import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Button,
@@ -20,20 +18,24 @@ import {
   Label,
   List,
 } from "semantic-ui-react";
-import { setLat, setLng, setZoom } from "../../mapSlice";
+import { mapInfoActions } from "../../mapSlice";
+import { aoiActions } from "../../areaOfInterest";
+
 import Dashboard from "../Dashboard";
 
 //"pk.eyJ1IjoidGltd2lsbGFlcnQiLCJhIjoiY2s1d2l0Ym5yMDlhdTNobnhhaDNsY2hwYSJ9.oVOhCQf5j61IBbpYvhzLwA";
 mapboxgl.accessToken = env.MB_TOKEN;
 
-// const geocoder = new MapboxGeocoder({
-//   accessToken: mapboxgl.accessToken,
-//   mapboxgl: mapboxgl,
-// });
-
 const MapBoxBase = () => {
   const dispatch = useDispatch();
 
+  // Geocoding Setup
+  const mbxClient = require("@mapbox/mapbox-sdk");
+  const geocoder = require("@mapbox/mapbox-sdk/services/geocoding");
+  const baseClient = mbxClient({ accessToken: env.MB_TOKEN });
+  const geocodingClient = geocoder(baseClient);
+
+  // For Map Initialization
   const mapContainer = useRef(null);
   const map = useRef(null);
 
@@ -41,16 +43,18 @@ const MapBoxBase = () => {
   const lat = useSelector((state) => state.mapInfo.lat);
   const zoom = useSelector((state) => state.mapInfo.zoom);
 
+  const communityName = useSelector((state) => state.mapInfo.communityName);
+  const communityLocation = useSelector((state) => state.mapInfo.communityLocation);
+
+
   const [lngField, setLngField] = useState(lng);
   const [latField, setLatField] = useState(lat);
   const [zoomField, setZoomField] = useState(zoom);
 
+  // Dashboard Variables
   const [openDashboard, setOpenDashboard] = useState(false);
 
-  const handleDashboard = (modal) => {
-    setOpenDashboard(modal);
-  };
-
+  /* Redux Testing Purposes */
   // useEffect(() => {
   //   setLngField(lng);
   // }, [lng]);
@@ -63,6 +67,7 @@ const MapBoxBase = () => {
   //   setZoomField(zoom);
   // }, [zoom]);
 
+  /* Set Map Input Fields Begins */
   const handleLng = (e, { value }) => {
     setLngField(value);
     // dispatch(setLng(lngField));
@@ -78,6 +83,9 @@ const MapBoxBase = () => {
     // dispatch(setZoom(zoomField));
   };
 
+  /* Set Map Input Fields Ends */
+
+  // Initialize Map
   useEffect(() => {
     if (map.current) return; // initialize map only once
     map.current = new mapboxgl.Map({
@@ -91,7 +99,7 @@ const MapBoxBase = () => {
     map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
   });
 
-  // Saves coordinates from zoom
+  // Update map as fields change
   useEffect(() => {
     if (!map.current) return; // wait for map to initialize
     map.current.on("move", () => {
@@ -99,35 +107,96 @@ const MapBoxBase = () => {
       setLatField(map.current.getCenter().lat.toFixed(4));
       setZoomField(map.current.getZoom().toFixed(2));
     });
-    // geocoder.mapboxClient.geocodeReverse(
-    //   {
-    //     latitude: latField,
-    //     longitude: lngField,
-    //   },
-    //   function (err, res) {
-    //     console.log(err, res);
-    //   }
-    // );
   });
+
+  // Set the Area of Interest
   const setAoI = () => {
     map.current.flyTo({
       center: [lngField, latField],
       zoom: zoomField,
-      essential: true, // this animation is considered essential with respect to prefers-reduced-motion
+      essential: true,
     });
 
-    // dispatch(setLat(latField));
-    // dispatch(setLng(lngField));
-    // dispatch(setZoom(zoomField));
+    // Set variables in Map Info Redux slice
+    dispatch(mapInfoActions.setLat({ lat: latField }));
+    dispatch(mapInfoActions.setLng({ lng: lngField }));
+    dispatch(mapInfoActions.setZoom({ zoom: zoomField }));
 
-    // console.log("latField: ", latField);
-    // console.log("lat: ", lat);
-    // console.log("lngField: ", lngField);
-    // console.log("lng: ", lng);
-    // console.log("zoomField: ", zoomField);
-    // console.log("zoom: ", zoom);
+    // Set variables in AoI Redux slice
+    dispatch(aoiActions.setLongitude({ longitude: lngField }));
+    dispatch(aoiActions.setLatitude({ latitude: latField }));
+
+    getCommunityLocation();
+    console.log("Location: ", communityLocation);
+    
+    getCommunityName();
+    console.log("Name: ", communityName);
+
   };
 
+  const getCommunityLocation = () => {
+
+    var lngF = Number(lngField);
+    var latF = Number(latField);
+
+    geocodingClient
+      .reverseGeocode({
+        // Longitude, Latitude (format)
+        query: [lngF, latF],
+        types: ["address"],
+        bbox: [lngF - 0.001, latF - 0.001, lngF + 0.001, latF + 0.001],
+      })
+      .send()
+      .then((response) => {
+        // GeoJSON document with geocoding matches
+        console.log(response.body);
+        try {
+            // console.log("Address Found!")
+            console.log(response.body.features[0].place_name);
+            dispatch(
+              aoiActions.setLocation({
+                location: response.body.features[0].place_name,
+              })
+            );
+
+        } catch {
+          // console.log("No address nearby.");
+          dispatch(
+            aoiActions.setLocation({ location: "No Address" })
+          );
+        }
+      });
+  };
+
+  const getCommunityName = () => {
+    var lngF = Number(lngField);
+    var latF = Number(latField);
+    geocodingClient
+      .reverseGeocode({
+        // Longitude, Latitude (format)
+        query: [lngF, latF],
+        types: ["neighborhood"],
+        bbox: [lngF - 0.001, latF - 0.001, lngF + 0.001, latF + 0.001],
+      })
+      .send()
+      .then((response) => {
+        // GeoJSON document with geocoding matches
+        console.log(response.body);
+        try {
+          dispatch(
+            aoiActions.setName({ name: response.body.features[0].place_name })
+          );
+        } catch {
+          console.log("No neighborhood nearby.");
+          dispatch(
+            mapInfoActions.setCommunityName({ communityName: "NOT FOUND" })
+          );
+        }
+      });
+    // console.log("Redux Community Name: ", communityName);
+  };
+
+  // Slider Updates the Area of Interest
   const moveSlider = (e, { value }) => {
     setZoomField(value);
     map.current.flyTo({

@@ -87,7 +87,7 @@ input[type="number"] {
 
 .ui.input.focus>input {
   border-color: rgb(141, 226, 156);
-  background-color: transparent;
+  background-color: rgba(35, 55, 75, 0.6);
   color: white;
 }
 .ui.input>input {
