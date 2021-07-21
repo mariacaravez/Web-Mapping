@@ -48,17 +48,17 @@ const Register = () => {
                     
                 }
                if (username==null || username=="" || password==null || password=="" || email==null || email=="" || number==null || number==""){  
-                    alert("Fields can't be blank");  
+                     
                    }
                else if(password.length<8){  
-                    alert("Password must be at least 6 characters long.");  
+                    
                     }
                 else if(!validator.isEmail(email))
                   {
-                         alert("InValid email address!");
+                         
                     }
                else if(flag==0){
-                        alert("username already exists");
+                        
                         setData1("");
 
                 }
