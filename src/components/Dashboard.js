@@ -1,20 +1,20 @@
-import React, { useState } from "react";
-import { Header, Image, Table, Icon, Label } from "semantic-ui-react";
-import { useDispatch, useSelector } from "react-redux";
+/*
+ * Author: Maria Caravez
+ * Description: This component is used to display the information
+ * within the community info object in the Redux store aoiSlice
+ * within a table collection.
+ */
+
+import React, { Text } from "react";
+import { Header, List, Table } from "semantic-ui-react";
+import { useSelector } from "react-redux";
 
 const Dashboard = () => {
-
-  // const lng = useSelector((state) => state.mapInfo.lng);
-  // const lat = useSelector((state) => state.mapInfo.lat);
-  // const communityName = useSelector((state) => state.mapInfo.communityName);
-
-
-  const longitude = useSelector((state) => state.areaOfInterest.longitude);
-  const latitude = useSelector((state) => state.areaOfInterest.latitude);
-  const communityLocation = useSelector((state) => state.areaOfInterest.location);
-  const communityName = useSelector((state) => state.areaOfInterest.name);
-
-  const [commName, setCommName] = useState(communityName);
+  const bounds = useSelector((state) => state.areaOfInterest.bounds);
+  const area = useSelector((state) => state.areaOfInterest.area);
+  const communityInfo = useSelector(
+    (state) => state.areaOfInterest.communityInfo
+  );
 
   return (
     <Table basic="very" celled collapsing>
@@ -25,37 +25,39 @@ const Dashboard = () => {
         </Table.Row>
       </Table.Header>
       <Table.Body>
-        <Table.Row>
-          <Table.Cell>
-            <Header>
-              <Header.Content as="h4">Community Location</Header.Content>
-            </Header>
-          </Table.Cell>
-          <Table.Cell>{communityLocation}</Table.Cell>
-        </Table.Row>
-        <Table.Row>
-          <Table.Cell>
-            <Header as="h4">
-              <Header.Content>Community Name</Header.Content>
-            </Header>
-          </Table.Cell>
-          <Table.Cell>{communityName}</Table.Cell>
-        </Table.Row>
+        {communityInfo.map((item, i) => (
+          <Table.Row key={i}>
+            <Table.Cell>
+              <Header as="h4">
+                <Header.Content>{item.type}</Header.Content>
+              </Header>
+            </Table.Cell>
+            <Table.Cell>{item.label}</Table.Cell>
+          </Table.Row>
+        ))}
+
         <Table.Row>
           <Table.Cell>
             <Header as="h4">
               <Header.Content>AoI Coordinates</Header.Content>
             </Header>
           </Table.Cell>
-          <Table.Cell>{longitude}, {latitude}</Table.Cell>
+          
+            <Table.Cell>
+            {bounds.map((item, i) => (
+              <List horizontal><List.Item>[{item.lat}, {item.lng}]</List.Item></List>
+              ))}
+            </Table.Cell>
+
         </Table.Row>
+
         <Table.Row>
           <Table.Cell>
             <Header as="h4">
               <Header.Content>AoI Area</Header.Content>
             </Header>
           </Table.Cell>
-          <Table.Cell>1234 sq. Kms</Table.Cell>
+          <Table.Cell>{area} sq km </Table.Cell>
         </Table.Row>
       </Table.Body>
     </Table>

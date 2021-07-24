@@ -1,3 +1,9 @@
+/*
+ * Author: Maria Caravez
+ * Description: Redux slice that shall contain
+ * base map information set by user.
+ */
+
 import { createSlice } from "@reduxjs/toolkit";
 
 export const baseMapSlice = createSlice({
@@ -7,9 +13,13 @@ export const baseMapSlice = createSlice({
     lat: 40,
     zoom: 2,
     currentMap: 1,
-    communityName: "hello"
+    communityName: "hello",
+    aoiSet: false
   },
   reducers: {
+    setAoI: (state, action) => {
+      state.aoiSet = action.payload.aoiSet;
+    },
     setLng: (state, action) => {
       state.lng = action.payload.lng;
     },

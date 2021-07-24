@@ -9,7 +9,7 @@ import GoogleBase from "./GoogleBase";
 import { minusZoom, plusZoom, setZoom } from "../../mapSlice";
 
 const basemaps = [
-  { key: "MB", text: "MapBox", value: 1 },
+  { key: "MB", text: "Mapbox", value: 1 },
   { key: "B", text: "Bing", value: 2 },
   { key: "G", text: "Google Maps", value: 3 },
 ];
@@ -70,8 +70,8 @@ const BaseMaps = () => {
 
   return (
     <Fragment>
-      <Menu style={{ padding: "0mm" }}>
-        <Menu.Item as={Link} to="/">
+      {/* <Menu style={{ padding: "0mm" }}> */}
+        {/* <Menu.Item as={Link} to="/">
           Home
         </Menu.Item>
         <Menu.Item>
@@ -81,53 +81,13 @@ const BaseMaps = () => {
             header="Choose Base Map"
             options={basemaps}
             value={basemapSelection}
-            // defaultValue={basemaps[0].value}
             onChange={handleBaseMap}
           />
-        </Menu.Item>
-        <Menu.Menu position="right">
+        </Menu.Item> */}
+        {/* <Menu.Menu position="right">
           <Menu.Item></Menu.Item>
-        </Menu.Menu>
-      </Menu>
-
-      {/* <div className="coordinates">
-        Longitude:
-        <Input
-          focus
-          type="number"
-          min="-180"
-          max="180"
-          size="mini"
-          placeholder="-74.5"
-          value={lngField}
-          // defaultValue={lng}
-          onChange={handleLng}
-        />
-        Latitude:
-        <Input
-          focus
-          type="number"
-          min="-90"
-          max="90"
-          size="mini"
-          placeholder="40"
-          value={latField}
-          // defaultValue={lat}
-          onChange={handleLat}
-        />
-        Zoom:
-        <Input
-          focus
-          type="number"
-          min="1"
-          max="22"
-          size="mini"
-          placeholder="17"
-          // defaultValue={zoom}
-          value={zoomField}
-          onChange={handleZoom}
-        />
-      </div> */}
+        </Menu.Menu> */}
+      {/* </Menu> */}
 
       {/* Slider Begins */}
       {/* <Input

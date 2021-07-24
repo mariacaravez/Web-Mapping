@@ -12,22 +12,6 @@ code {
     monospace;
 }
 
-/* .ui.menu {
-  margin: 0mm;
-} */
-.ui.menu .item {
-  padding: 0.85vh;
-}
-
-.ui.dropdown .menu {
-  z-index: 0;
-  position: absolute;
-}
-.ui.label {
-  color: black;
-  font-weight: 500;
-}
-
 /* Slider Styling Begins  */
 .ui.input.slider.slider {
   /* background-color: red; */
@@ -79,11 +63,11 @@ element.style {
   height: 90vh;
 }
 
-input[type="number"] {
+/* input[type="number"] {
   background-color: transparent;
   color: white;
   text-align: center;
-}
+} */
 
 .ui.input.focus>input {
   border-color: rgb(141, 226, 156);
@@ -112,9 +96,6 @@ input[type="number"] {
 }
 .ui.form .fields {
   margin: 0mm;
-}
-.ui.form .input {
-  width: 50%;
 }
 
 .alignment {
