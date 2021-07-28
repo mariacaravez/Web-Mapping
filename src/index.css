@@ -98,6 +98,12 @@ element.style {
   margin: 0mm;
 }
 
+.ui.popup {
+  border: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
 .alignment {
   display: flex;
   flex-direction: column;

@@ -6,6 +6,7 @@ import { Provider } from "react-redux";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "semantic-ui-css/semantic.min.css";
 import "./index.css";
+
 import App from "./App";
 
 ReactDOM.render(

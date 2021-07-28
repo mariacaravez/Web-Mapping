@@ -3,31 +3,32 @@
  * Description: This is Base Map #1 (used for logic in BaseMaps component)
  * It retrieves the map information from the Redux store mapSlice and
  * displays it accordingly.
+ *
+ * Map Information:
+ * Longitude (X) [West-East] Range: -180 through +180
+ * Latitude (Y) [North-South] Range: -90 through +90
  */
 import React, { useRef, useEffect, useState } from "react";
-import * as turf from "@turf/turf";
-import bboxPolygon from "@turf/bbox-polygon";
-
-
-// import {bboxPolygon} from "@turf/helpers"
-import env from "react-dotenv";
-import mapboxgl from "!mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
-import { useDispatch, useSelector } from "react-redux";
 import { Button, Input, Form, Icon, Popup, Label } from "semantic-ui-react";
+import env from "react-dotenv";
+import { Rnd } from "react-rnd";
+
+import { useDispatch, useSelector } from "react-redux";
 import { mapInfoActions } from "../../mapSlice";
 import { aoiActions } from "../../aoiSlice";
+
+import * as turf from "@turf/turf";
+import bboxPolygon from "@turf/bbox-polygon";
+import mapboxgl from "!mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
 
 import Dashboard from "../Dashboard";
 
 turf.bboxPolygon = bboxPolygon;
 
-
 //"pk.eyJ1IjoidGltd2lsbGFlcnQiLCJhIjoiY2s1d2l0Ym5yMDlhdTNobnhhaDNsY2hwYSJ9.oVOhCQf5j61IBbpYvhzLwA";
 mapboxgl.accessToken = env.MB_TOKEN;
 
-
 const MapBoxBase = () => {
-
   const dispatch = useDispatch();
 
   // Geocoding Setup
@@ -52,6 +53,10 @@ const MapBoxBase = () => {
   const [lngField, setLngField] = useState(lng);
   const [latField, setLatField] = useState(lat);
   const [zoomField, setZoomField] = useState(zoom);
+  const [north, setNorth] = useState(0);
+  const [west, setWest] = useState(0);
+  const [south, setSouth] = useState(0);
+  const [east, setEast] = useState(0);
 
   /* Set Map Input Fields Begins */
   const handleLng = (e, { value }) => {
@@ -77,10 +82,10 @@ const MapBoxBase = () => {
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/satellite-v9",
-      // center: [lngField, latField],
-      // zoom: zoomField,
-      center: [lng, lat],
-      zoom: zoom,
+      center: [lngField, latField],
+      zoom: zoomField,
+      // center: [lng, lat],
+      // zoom: zoom,
     });
 
     // Add zoom +/- controls
@@ -109,33 +114,52 @@ const MapBoxBase = () => {
       essential: true,
     });
 
-    // Retrieves 
-    var north = map.current.getBounds().getNorthEast().lng;
-    var east = map.current.getBounds().getNorthEast().lat;
-    var south = map.current.getBounds().getSouthWest().lng;
-    var west = map.current.getBounds().getSouthWest().lat;
+    // Retrieves the extent of the map
+    setEast(map.current.getBounds().getNorthEast().lng);
+    setNorth(map.current.getBounds().getNorthEast().lat);
+    setWest(map.current.getBounds().getSouthWest().lng);
+    setSouth(map.current.getBounds().getSouthWest().lat);
 
     // BBox Format: [minX, minY, maxX, maxY]
     // i.e. [west, south, east, north]
     var bbox = [west, south, east, north];
-
     var aoi = turf.bboxPolygon(bbox);
     var area = turf.area(aoi);
-    var areaSqKms = area/1000000;
+    var areaSqKms = area / 1000000;
 
     var rounded_area = Math.round(areaSqKms * 100) / 100;
+    dispatch(
+      aoiActions.setBounds({
+        lng: Math.round(west * 100) / 100,
+        lat: Math.round(north * 100) / 100,
+      })
+    );
+    dispatch(
+      aoiActions.setBounds({
+        lng: Math.round(east * 100) / 100,
+        lat: Math.round(north * 100) / 100,
+      })
+    );
+    dispatch(
+      aoiActions.setBounds({
+        lng: Math.round(west * 100) / 100,
+        lat: Math.round(south * 100) / 100,
+      })
+    );
+    dispatch(
+      aoiActions.setBounds({
+        lng: Math.round(east * 100) / 100,
+        lat: Math.round(south * 100) / 100,
+      })
+    );
 
-    // console.log("NE: ", lngLat);
-    dispatch(aoiActions.setBounds({ lng: east, lat: north }));
-    dispatch(aoiActions.setBounds({ lng: west, lat: south }));
-    dispatch(aoiActions.setArea({area: rounded_area}));
+    dispatch(aoiActions.setArea({ area: rounded_area }));
 
     // Set variables in AoI Redux slice
     dispatch(aoiActions.setLongitude({ longitude: lngField }));
     dispatch(aoiActions.setLatitude({ latitude: latField }));
 
-    console.log("These are the bounds:", bounds);
-    // console.log("These are the local bounds:", lngLat);
+    // console.log("These are the bounds:", bounds);
 
     getCommunityInfo();
   };
@@ -150,20 +174,17 @@ const MapBoxBase = () => {
 
     geocodingClient
       .reverseGeocode({
-        // Format: Longitude, Latitude
+        // Format: [longitude, latitude]
         query: [lngF, latF],
 
-        // types: ["address"],
-        // bbox: [lngF - 0.001, latF - 0.001, lngF + 0.001, latF + 0.001],
+        // Format: [minLongitude, minLatitude, maxLongitude, maxLatitude]
+        //         [minX, minY, maxX, maxY]
+        // bbox: [west, south, east, north]
       })
       .send()
       .then((response) => {
         // GeoJSON document with geocoding matches
         try {
-          // response.body.features.forEach((element) =>
-          //   console.log(element.place_type, element.place_name)
-          // );
-          console.log(response.body);
           response.body.features.forEach((element) =>
             dispatch(
               aoiActions.setCommunityInfo({
@@ -184,7 +205,6 @@ const MapBoxBase = () => {
     dispatch(mapInfoActions.setZoom(value));
     map.current.flyTo({
       center: [lngField, latField],
-      // center: [lng, lat],
       zoom: value,
       essential: true,
     });
@@ -228,7 +248,6 @@ const MapBoxBase = () => {
                 size="small"
                 placeholder="40"
                 value={latField}
-                // value={lat}
                 onChange={handleLat}
               />
             </Form.Field>
@@ -243,24 +262,26 @@ const MapBoxBase = () => {
                 size="small"
                 placeholder="17"
                 value={zoomField}
-                // value={zoom}
                 onChange={handleZoom}
               />
             </Form.Field>
             {/* Area of Interest Input Fields Ends */}
 
-            <Button color="green" type="submit">
+            {/* <Button color="green" type="submit">
               Set AoI
-            </Button>
+            </Button> */}
 
             {/* Dashboard Begins */}
             <Popup
-              trigger={<Label content="Dashboard" color="blue" />}
+              basic
+              trigger={<Button color="blue" content="Dashboard" />}
+              content={<Dashboard />}
               on="click"
               pinned
-              position="bottom center"
-              content={<Dashboard />}
+              wide="very"
+              // position="bottom center"
             />
+
             {/* Dashboard Ends */}
           </Form.Group>
         </Form>
