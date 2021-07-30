@@ -26,12 +26,12 @@ function Map() {
   );
 }
 
-const G_BaseMap = withScriptjs(withGoogleMap(Map));
+const GoogleBaseMap = withScriptjs(withGoogleMap(Map));
 
 export default function App() {
   return (
     <div style={{ width: "100vw", height: "100vh" }}>
-      <G_BaseMap
+      <GoogleBaseMap
         // "https://maps.googleapis.com/maps/api/js?key=${googleToken}&v=3.exp&libraries=geometry,drawing,places"
         googleMapURL="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places"
         loadingElement={<div style={{ height: `100%` }} />}

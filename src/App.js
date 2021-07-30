@@ -15,8 +15,7 @@ import {
 
 // All other components in our application
 import Profile from "./components/Profile";
-import NavBar from "./components/NavBar";
-import BaseMaps from "./components/BaseMaps/BaseMaps";
+import BaseMapInfo from "./components/BaseMapInfo";
 
 
 /* Application Begins Here */
@@ -26,8 +25,7 @@ export default function App() {
       <Router>
         <Fragment>
           <Route exact path="/">
-            <NavBar />
-            {/* <BaseMaps/> */}
+            <BaseMapInfo />
             
           </Route>
 

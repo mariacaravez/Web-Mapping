@@ -36,8 +36,13 @@ export const aoiSlice = createSlice({
     },
     setBounds: (state, action) => {
       state.bounds.push({
-        lng: action.payload.lng,
-        lat: action.payload.lat,
+        // lng: action.payload.lng,
+        // lat: action.payload.lat,
+        north: action.payload.north,
+        east: action.payload.east,
+        south: action.payload.south,
+        west: action.payload.west,
+
       });
     },
     clearBounds: (state) => {

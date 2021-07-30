@@ -1,13 +1,23 @@
 import React, { Fragment, useEffect, useState } from "react";
-import { Button, Input, Form, Icon, Menu, Dropdown, Container } from "semantic-ui-react";
+import {
+  Button,
+  Input,
+  Form,
+  Icon,
+  Menu,
+  Dropdown,
+  Container,
+  Popup,
+} from "semantic-ui-react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { mapInfoActions } from "../mapSlice";
-import { aoiActions } from "../aoiSlice";
-import BaseMaps from "./BaseMaps/BaseMaps";
+import { mapInfoActions } from "../store/mapSlice";
+import { aoiActions } from "../store/aoiSlice";
+
 import MapBoxBase from "./BaseMaps/MapBoxBase";
 import BingBase from "./BaseMaps/BingBase";
 import GoogleBase from "./BaseMaps/GoogleBase";
+import Dashboard from "./Dashboard";
 
 const basemaps = [
   { key: "MB", text: "Mapbox", value: 1 },
@@ -18,20 +28,20 @@ const basemaps = [
 const NavBar = () => {
   const dispatch = useDispatch();
 
-  // Gets current state of mapInfo from Redux store
+  // Gets current state of map information from Redux store
   const lng = useSelector((state) => state.mapInfo.lng);
   const lat = useSelector((state) => state.mapInfo.lat);
   const zoom = useSelector((state) => state.mapInfo.zoom);
-  // const aoiSet = useSelector((state) => state.mapInfo.aoiSet);
+  const inputs = useSelector((state) => state.mapInfo.inputs);
+  const currentMap = useSelector((state) => state.mapInfo.currentMap);
 
-  //Local Variables
+
+  //Local variables for input fields
   const [lngField, setLngField] = useState(lng);
   const [latField, setLatField] = useState(lat);
   const [zoomField, setZoomField] = useState(zoom);
-
-  /* Set or Change Current Base Map */
   const [basemapSelection, setBaseMapSelection] = useState(null);
-  const currentMap = useSelector((state) => state.mapInfo.currentMap);
+
 
   useEffect(() => {
     setBaseMapSelection(currentMap);
@@ -50,34 +60,32 @@ const NavBar = () => {
     setZoomField(value);
   };
 
-  /* Set Map Input Fields Ends */
-
   const handleBaseMap = (e, { value }) => {
     setBaseMapSelection(value);
   };
 
-  // Goes to the Area of Interest
-  const setAoI = () => {
-    // Removes previous AoI information
-    dispatch(aoiActions.clearCommunityInfo());
+  // Notifies base map of new inputs
+  const handleInputs = () => {
+    dispatch(mapInfoActions.setInputs({ inputs: true }));
+    // console.log("Set Map Clicked.");
 
-    dispatch(mapInfoActions.setAoI(true));
+  };
+
+  const setMapInfo = () => {
+    // Notify current base map of new info
+    dispatch(mapInfoActions.updateInfo({update: true}))
 
     // Set variables in Map Info Redux slice
     dispatch(mapInfoActions.setLat({ lat: latField }));
     dispatch(mapInfoActions.setLng({ lng: lngField }));
     dispatch(mapInfoActions.setZoom({ zoom: zoomField }));
-
-    // Set variables in AoI Redux slice
-    dispatch(aoiActions.setLongitude({ longitude: lngField }));
-    dispatch(aoiActions.setLatitude({ latitude: latField }));
   };
 
   return (
     <Fragment>
       <Menu>
         <Menu.Item as={Link} to="/">
-          Home
+          Community Mapping Web Application
         </Menu.Item>
         <Menu.Item>
           <Icon name="map" />
@@ -85,12 +93,12 @@ const NavBar = () => {
             selection
             header="Choose Base Map"
             options={basemaps}
-            value={basemapSelection}
+            defaultValue={currentMap}
             onChange={handleBaseMap}
           />
         </Menu.Item>
         <Menu.Item position="right">
-          <Form onSubmit={setAoI} label="Area of Interest">
+          <Form onSubmit={setMapInfo} label="Area of Interest">
             {/* Area of Interest Input Fields Begins */}
             <Form.Group>
               <Form.Field>
@@ -134,8 +142,8 @@ const NavBar = () => {
               {/* Area of Interest Input Fields Ends */}
 
               <Form.Field>
-                <Button color="green" type="submit">
-                  Set AoI
+                <Button color="green" type="submit" onClick={handleInputs}>
+                  Set Map
                 </Button>
               </Form.Field>
             </Form.Group>
@@ -143,9 +151,29 @@ const NavBar = () => {
         </Menu.Item>
       </Menu>
       <Container fluid className="map-container">
-      {basemapSelection === 1 && <MapBoxBase />}
-      {basemapSelection === 2 && <BingBase />}
-      {basemapSelection === 3 && <GoogleBase />}
+        {/* Dashboard Begins */}
+        <Popup
+          basic
+          trigger={
+            <Form onSubmit={setMapInfo}>
+            {/* <Form> */}
+              <Button
+                color="blue"
+                content="Dashboard"
+                className="onMap dashboard"
+                type="submit"
+              />
+            </Form>
+          }
+          content={<Dashboard />}
+          on="click"
+          pinned
+          wide="very"
+        ></Popup>
+        {/* Dashboard Ends */}
+        {basemapSelection === 1 && <MapBoxBase />}
+        {basemapSelection === 2 && <BingBase />}
+        {basemapSelection === 3 && <GoogleBase />}
       </Container>
     </Fragment>
   );

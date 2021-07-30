@@ -9,13 +9,20 @@
  * Latitude (Y) [North-South] Range: -90 through +90
  */
 import React, { useRef, useEffect, useState } from "react";
-import { Button, Input, Form, Icon, Popup, Label } from "semantic-ui-react";
+import {
+  Button,
+  Input,
+  Form,
+  Icon,
+  Popup,
+  Container,
+  Label,
+} from "semantic-ui-react";
 import env from "react-dotenv";
-import { Rnd } from "react-rnd";
 
 import { useDispatch, useSelector } from "react-redux";
-import { mapInfoActions } from "../../mapSlice";
-import { aoiActions } from "../../aoiSlice";
+import { mapInfoActions } from "../../store/mapSlice";
+import { aoiActions } from "../../store/aoiSlice";
 
 import * as turf from "@turf/turf";
 import bboxPolygon from "@turf/bbox-polygon";
@@ -46,35 +53,18 @@ const MapBoxBase = () => {
   const lat = useSelector((state) => state.mapInfo.lat);
   const zoom = useSelector((state) => state.mapInfo.zoom);
 
-  const bounds = useSelector((state) => state.areaOfInterest.bounds);
-  const aoiSet = useSelector((state) => state.mapInfo.aoiSet);
+  const update = useSelector((state) => state.mapInfo.update);
+  const inputs = useSelector((state) => state.mapInfo.inputs);
 
   //Local Variables
   const [lngField, setLngField] = useState(lng);
   const [latField, setLatField] = useState(lat);
   const [zoomField, setZoomField] = useState(zoom);
+
   const [north, setNorth] = useState(0);
-  const [west, setWest] = useState(0);
-  const [south, setSouth] = useState(0);
   const [east, setEast] = useState(0);
-
-  /* Set Map Input Fields Begins */
-  const handleLng = (e, { value }) => {
-    setLngField(value);
-    dispatch(mapInfoActions.setLng(value));
-  };
-
-  const handleLat = (e, { value }) => {
-    setLatField(value);
-    dispatch(mapInfoActions.setLat(value));
-  };
-
-  const handleZoom = (e, { value }) => {
-    setZoomField(value);
-    dispatch(mapInfoActions.setZoom(value));
-  };
-
-  /* Set Map Input Fields Ends */
+  const [south, setSouth] = useState(0);
+  const [west, setWest] = useState(0);
 
   // Initialize Map
   useEffect(() => {
@@ -84,8 +74,6 @@ const MapBoxBase = () => {
       style: "mapbox://styles/mapbox/satellite-v9",
       center: [lngField, latField],
       zoom: zoomField,
-      // center: [lng, lat],
-      // zoom: zoom,
     });
 
     // Add zoom +/- controls
@@ -100,12 +88,35 @@ const MapBoxBase = () => {
       setLatField(map.current.getCenter().lat.toFixed(4));
       setZoomField(map.current.getZoom().toFixed(2));
     });
+
+    // Retrieves the extent of the map
+    setEast(map.current.getBounds().getNorthEast().lng);
+    setNorth(map.current.getBounds().getNorthEast().lat);
+    setWest(map.current.getBounds().getSouthWest().lng);
+    setSouth(map.current.getBounds().getSouthWest().lat);
   });
+
+  useEffect(() => {
+    if (update) {
+      setAoI();
+    }
+  });
+
+  /* SLOWS DOWN APPLICATION */
+  // useEffect(() => {
+  //   if (inputs) {
+  //     // console.log("Map Info: ", lng, lat, zoom);
+  //     map.current.flyTo({
+  //       center: [lngField, latField],
+  //       zoom: zoomField,
+  //       essential: true,
+  //     });
+  //   }
+  // });
 
   const setAoI = () => {
     // Removes previous AoI information
     dispatch(aoiActions.clearBounds());
-    dispatch(aoiActions.clearCommunityInfo());
 
     // Goes to the location based on user input
     map.current.flyTo({
@@ -114,57 +125,36 @@ const MapBoxBase = () => {
       essential: true,
     });
 
-    // Retrieves the extent of the map
-    setEast(map.current.getBounds().getNorthEast().lng);
-    setNorth(map.current.getBounds().getNorthEast().lat);
-    setWest(map.current.getBounds().getSouthWest().lng);
-    setSouth(map.current.getBounds().getSouthWest().lat);
-
     // BBox Format: [minX, minY, maxX, maxY]
     // i.e. [west, south, east, north]
     var bbox = [west, south, east, north];
     var aoi = turf.bboxPolygon(bbox);
     var area = turf.area(aoi);
     var areaSqKms = area / 1000000;
-
     var rounded_area = Math.round(areaSqKms * 100) / 100;
-    dispatch(
-      aoiActions.setBounds({
-        lng: Math.round(west * 100) / 100,
-        lat: Math.round(north * 100) / 100,
-      })
-    );
-    dispatch(
-      aoiActions.setBounds({
-        lng: Math.round(east * 100) / 100,
-        lat: Math.round(north * 100) / 100,
-      })
-    );
-    dispatch(
-      aoiActions.setBounds({
-        lng: Math.round(west * 100) / 100,
-        lat: Math.round(south * 100) / 100,
-      })
-    );
-    dispatch(
-      aoiActions.setBounds({
-        lng: Math.round(east * 100) / 100,
-        lat: Math.round(south * 100) / 100,
-      })
-    );
-
-    dispatch(aoiActions.setArea({ area: rounded_area }));
 
     // Set variables in AoI Redux slice
-    dispatch(aoiActions.setLongitude({ longitude: lngField }));
-    dispatch(aoiActions.setLatitude({ latitude: latField }));
+    dispatch(aoiActions.setArea({ area: rounded_area }));
 
-    // console.log("These are the bounds:", bounds);
+    dispatch(
+      aoiActions.setBounds({
+        north: Math.round(north * 100) / 100,
+        east: Math.round(east * 100) / 100,
+        south: Math.round(south * 100) / 100,
+        west: Math.round(west * 100) / 100,
+      })
+    );
 
     getCommunityInfo();
+
+    // Reset Update 
+    dispatch(mapInfoActions.updateInfo({ update: false }));
   };
 
   const getCommunityInfo = () => {
+    console.log("Update: ", update);
+    dispatch(aoiActions.clearCommunityInfo());
+
     /*
      * Query does not read current variables as
      * number objects so had to typecast variables
@@ -174,11 +164,10 @@ const MapBoxBase = () => {
 
     geocodingClient
       .reverseGeocode({
-        // Format: [longitude, latitude]
+        /* Format: [longitude, latitude] */
         query: [lngF, latF],
 
-        // Format: [minLongitude, minLatitude, maxLongitude, maxLatitude]
-        //         [minX, minY, maxX, maxY]
+        /* Format: [minLongitude, minLatitude, maxLongitude, maxLatitude] */
         // bbox: [west, south, east, north]
       })
       .send()
@@ -213,80 +202,13 @@ const MapBoxBase = () => {
   return (
     <div style={{ alignSelf: "center" }}>
       <div ref={mapContainer} className="map-container">
-        <Form
-          onSubmit={setAoI}
-          className="coordinates onMap"
-          style={{ maxWidth: "50%", top: "1vh", left: "1vw" }}
-          label="Area of Interest"
-        >
-          {/* Area of Interest Input Fields Begins */}
-          <Form.Group>
-            <Form.Field>
-              <Input
-                label={{ basic: true, content: "Longitude" }}
-                focus
-                type="number"
-                step="0.000001"
-                min="-180"
-                max="180"
-                size="small"
-                placeholder="-74.5"
-                value={lngField}
-                // value={lng}
-                onChange={handleLng}
-              />
-            </Form.Field>
 
-            <Form.Field>
-              <Input
-                label={{ basic: true, content: "Latitude" }}
-                focus
-                type="number"
-                step="0.000001"
-                min="-90"
-                max="90"
-                size="small"
-                placeholder="40"
-                value={latField}
-                onChange={handleLat}
-              />
-            </Form.Field>
-            <Form.Field>
-              <Input
-                label={{ basic: true, content: "Zoom" }}
-                focus
-                type="number"
-                step="0.01"
-                min="1"
-                max="22"
-                size="small"
-                placeholder="17"
-                value={zoomField}
-                onChange={handleZoom}
-              />
-            </Form.Field>
-            {/* Area of Interest Input Fields Ends */}
+        {/* Current Coordinate Display */}
+        <div className="sidebar">
+          Longitude: {lngField} | Latitude: {latField} | Zoom: {zoomField}
+        </div>
 
-            {/* <Button color="green" type="submit">
-              Set AoI
-            </Button> */}
-
-            {/* Dashboard Begins */}
-            <Popup
-              basic
-              trigger={<Button color="blue" content="Dashboard" />}
-              content={<Dashboard />}
-              on="click"
-              pinned
-              wide="very"
-              // position="bottom center"
-            />
-
-            {/* Dashboard Ends */}
-          </Form.Group>
-        </Form>
-
-        {/* Slider Begins */}
+        {/* Zoom Slider */}
         <Input
           className="slider"
           type="range"
@@ -299,7 +221,7 @@ const MapBoxBase = () => {
           <input />
           <Icon circular inverted name="plus" />
         </Input>
-        {/* Slider Ends */}
+
       </div>
     </div>
   );

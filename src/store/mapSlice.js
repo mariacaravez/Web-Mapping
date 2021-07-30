@@ -13,13 +13,11 @@ export const baseMapSlice = createSlice({
     lat: 40,
     zoom: 2,
     currentMap: 1,
-    communityName: "hello",
-    aoiSet: false
+    communityName: "",
+    update: false,
+    inputs: false,
   },
   reducers: {
-    setAoI: (state, action) => {
-      state.aoiSet = action.payload.aoiSet;
-    },
     setLng: (state, action) => {
       state.lng = action.payload.lng;
     },
@@ -34,7 +32,13 @@ export const baseMapSlice = createSlice({
     },
     setCommunityName: (state, action) => {
       state.communityName = action.payload;
-    }
+    },
+    updateInfo: (state, action) => {
+      state.update = action.payload.update;
+    },
+    setInputs: (state, action) => {
+      state.inputs = action.payload.inputs;
+    },
   },
 });
 
