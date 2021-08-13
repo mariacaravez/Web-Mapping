@@ -9,36 +9,26 @@
  * Latitude (Y) [North-South] Range: -90 through +90
  */
 import React, { useRef, useEffect, useState } from "react";
-import {
-  Button,
-  Input,
-  Form,
-  Icon,
-  Popup,
-  Container,
-  Label,
-} from "semantic-ui-react";
+import { Button, Input, Form, Icon, Label } from "semantic-ui-react";
 import env from "react-dotenv";
 
 import { useDispatch, useSelector } from "react-redux";
-import { mapInfoActions } from "../../store/mapSlice";
-import { aoiActions } from "../../store/aoiSlice";
+import { mapInfoActions } from "../../redux-store/mapSlice";
+import { aoiActions } from "../../redux-store/aoiSlice";
 
 import * as turf from "@turf/turf";
 import bboxPolygon from "@turf/bbox-polygon";
 import mapboxgl from "!mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
 
-import Dashboard from "../Dashboard";
-
-turf.bboxPolygon = bboxPolygon;
-
-//"pk.eyJ1IjoidGltd2lsbGFlcnQiLCJhIjoiY2s1d2l0Ym5yMDlhdTNobnhhaDNsY2hwYSJ9.oVOhCQf5j61IBbpYvhzLwA";
 mapboxgl.accessToken = env.MB_TOKEN;
+
+// To retrieve area of current map view
+turf.bboxPolygon = bboxPolygon;
 
 const MapBoxBase = () => {
   const dispatch = useDispatch();
 
-  // Geocoding Setup
+  // Geocoding Setup to retrieve community information
   const mbxClient = require("@mapbox/mapbox-sdk");
   const geocoder = require("@mapbox/mapbox-sdk/services/geocoding");
   const baseClient = mbxClient({ accessToken: env.MB_TOKEN });
@@ -53,8 +43,7 @@ const MapBoxBase = () => {
   const lat = useSelector((state) => state.mapInfo.lat);
   const zoom = useSelector((state) => state.mapInfo.zoom);
 
-  const update = useSelector((state) => state.mapInfo.update);
-  const inputs = useSelector((state) => state.mapInfo.inputs);
+  const update = useSelector((state) => state.areaOfInterest.update);
 
   //Local Variables
   const [lngField, setLngField] = useState(lng);
@@ -65,6 +54,23 @@ const MapBoxBase = () => {
   const [east, setEast] = useState(0);
   const [south, setSouth] = useState(0);
   const [west, setWest] = useState(0);
+
+  /* Set Map Input Fields Begins */
+  const handleLng = (e, { value }) => {
+    setLngField(value);
+    dispatch(mapInfoActions.setLng({ lng: value }));
+  };
+
+  const handleLat = (e, { value }) => {
+    setLatField(value);
+    dispatch(mapInfoActions.setLat({ lat: value }));
+  };
+
+  const handleZoom = (e, { value }) => {
+    setZoomField(value);
+    dispatch(mapInfoActions.setZoom({ zoom: value }));
+  };
+  /* Set Map Input Fields Ends */
 
   // Initialize Map
   useEffect(() => {
@@ -80,7 +86,17 @@ const MapBoxBase = () => {
     map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
   });
 
-  // Update map as fields change
+  /* 
+  *  HELPER FUNCTION: Sets map information in
+  *  Redux store with current input field values
+  */
+  const setMapInfo = () => {
+    dispatch(mapInfoActions.setLat({ lat: latField }));
+    dispatch(mapInfoActions.setLng({ lng: lngField }));
+    dispatch(mapInfoActions.setZoom({ zoom: zoomField }));
+  };
+
+  // Update map information in real-time
   useEffect(() => {
     if (!map.current) return; // wait for map to initialize
     map.current.on("move", () => {
@@ -96,27 +112,19 @@ const MapBoxBase = () => {
     setSouth(map.current.getBounds().getSouthWest().lat);
   });
 
+  // Continously checks update variable in order to refresh dashboard
   useEffect(() => {
     if (update) {
       setAoI();
     }
   });
 
-  /* SLOWS DOWN APPLICATION */
-  // useEffect(() => {
-  //   if (inputs) {
-  //     // console.log("Map Info: ", lng, lat, zoom);
-  //     map.current.flyTo({
-  //       center: [lngField, latField],
-  //       zoom: zoomField,
-  //       essential: true,
-  //     });
-  //   }
-  // });
-
   const setAoI = () => {
-    // Removes previous AoI information
+    // Clears previous bounds array from AoI Redux slice
     dispatch(aoiActions.clearBounds());
+
+    // Helper function: Line 90
+    setMapInfo();
 
     // Goes to the location based on user input
     map.current.flyTo({
@@ -125,17 +133,21 @@ const MapBoxBase = () => {
       essential: true,
     });
 
-    // BBox Format: [minX, minY, maxX, maxY]
-    // i.e. [west, south, east, north]
+    // Creates a bounding box object for polygon
     var bbox = [west, south, east, north];
+    // Creates a polygon for area
     var aoi = turf.bboxPolygon(bbox);
+    // Gets area of polygon
     var area = turf.area(aoi);
+    // Translates area to square kilometers
     var areaSqKms = area / 1000000;
+    // Minimizes area to two decimal points
     var rounded_area = Math.round(areaSqKms * 100) / 100;
 
-    // Set variables in AoI Redux slice
+    // Set area in AoI Redux slice
     dispatch(aoiActions.setArea({ area: rounded_area }));
 
+    // Sets bounds in AoI Redux Slice
     dispatch(
       aoiActions.setBounds({
         north: Math.round(north * 100) / 100,
@@ -145,36 +157,40 @@ const MapBoxBase = () => {
       })
     );
 
+    // Performs query for area of interest information
     getCommunityInfo();
 
-    // Reset Update 
-    dispatch(mapInfoActions.updateInfo({ update: false }));
+    // Resets update variable that controls refresh button in dashboard
+    dispatch(aoiActions.updateInfo({ update: false }));
   };
 
+  /*
+   * Function that retrieves community information based on the current
+   * coordinates via MapBox API and then sets the objects in array
+   * within the AoI Redux slice to display on Dashboard.
+   */
   const getCommunityInfo = () => {
-    console.log("Update: ", update);
+    // Clears previous community info array  from AoI Redux slice
     dispatch(aoiActions.clearCommunityInfo());
 
     /*
-     * Query does not read current variables as
+     * Query is not reading current variables as
      * number objects so had to typecast variables
      */
     var lngF = Number(lngField);
     var latF = Number(latField);
 
+    // Retrieves information of area with current coordinates
     geocodingClient
       .reverseGeocode({
-        /* Format: [longitude, latitude] */
         query: [lngF, latF],
-
-        /* Format: [minLongitude, minLatitude, maxLongitude, maxLatitude] */
-        // bbox: [west, south, east, north]
       })
       .send()
       .then((response) => {
-        // GeoJSON document with geocoding matches
+        // Iterates through GeoJSON object of AoI information
         try {
           response.body.features.forEach((element) =>
+            // Saves community information from query to AoI Redux slice
             dispatch(
               aoiActions.setCommunityInfo({
                 type: element.place_type,
@@ -190,8 +206,13 @@ const MapBoxBase = () => {
 
   // Slider Updates the Area of Interest
   const moveSlider = (e, { value }) => {
+    // Updates zoom field value
     setZoomField(value);
+    
+    // Updates Map Redux slice
     dispatch(mapInfoActions.setZoom(value));
+
+    // Zooms in on current coordinates
     map.current.flyTo({
       center: [lngField, latField],
       zoom: value,
@@ -202,12 +223,63 @@ const MapBoxBase = () => {
   return (
     <div style={{ alignSelf: "center" }}>
       <div ref={mapContainer} className="map-container">
+        <Form
+          onSubmit={setAoI}
+          className="coordinates onMap"
+          style={{ maxWidth: "50%", top: "1vh", left: "1vw" }}
+          label="Area of Interest"
+        >
+          {/* Area of Interest Input Fields Begins */}
+          <Form.Group>
+            <Form.Field>
+              <Input
+                label={{ basic: true, content: "Longitude" }}
+                focus
+                type="number"
+                step="0.000001"
+                min="-180"
+                max="180"
+                size="small"
+                placeholder="-74.5"
+                value={lngField}
+                onChange={handleLng}
+              />
+            </Form.Field>
 
-        {/* Current Coordinate Display */}
-        <div className="sidebar">
-          Longitude: {lngField} | Latitude: {latField} | Zoom: {zoomField}
-        </div>
-
+            <Form.Field>
+              <Input
+                label={{ basic: true, content: "Latitude" }}
+                focus
+                type="number"
+                step="0.000001"
+                min="-90"
+                max="90"
+                size="small"
+                placeholder="40"
+                value={latField}
+                onChange={handleLat}
+              />
+            </Form.Field>
+            <Form.Field>
+              <Input
+                label={{ basic: true, content: "Zoom" }}
+                focus
+                type="number"
+                step="0.01"
+                min="1"
+                max="22"
+                size="small"
+                placeholder="17"
+                value={zoomField}
+                onChange={handleZoom}
+              />
+            </Form.Field>
+            {/* Area of Interest Input Fields Ends */}
+            <Form.Field>
+              <Button color="green" type="submit" icon="arrow right" />
+            </Form.Field>
+          </Form.Group>
+        </Form>
         {/* Zoom Slider */}
         <Input
           className="slider"
@@ -221,7 +293,6 @@ const MapBoxBase = () => {
           <input />
           <Icon circular inverted name="plus" />
         </Input>
-
       </div>
     </div>
   );

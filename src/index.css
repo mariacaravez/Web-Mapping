@@ -19,7 +19,6 @@ code {
   position: relative;
   top: 80vh;
   left: 1.5vw;
-  /* transform: rotate(-90deg); */
 }
 .ui.input > input[type="range"] {
   padding: 0mm;
@@ -63,12 +62,6 @@ element.style {
   height: 90vh;
 }
 
-/* input[type="number"] {
-  background-color: transparent;
-  color: white;
-  text-align: center;
-} */
-
 .ui.input.focus > input {
   border-color: rgb(141, 226, 156);
   background-color: rgba(35, 55, 75, 0.6);
@@ -80,14 +73,10 @@ element.style {
 .coordinates {
   background-color: transparent;
   color: #ffffff;
-  /* padding: 6px 6px; */
   font-family: Arial, Helvetica, sans-serif;
   font-size: 16px;
-  /* z-index: 1;
-  position: absolute; */
   top: 10vh;
   left: 1vw;
-  /* margin: 12px; */
   border-radius: 15px;
 }
 .onMap {
@@ -122,16 +111,3 @@ element.style {
   margin: 12px;
   border-radius: 4px;
 }
-
-.dashboard {
-  top: 1vh;
-  left: 2vw;
-  position: absolute;
-  z-index: 1;
-
-}
-
-/* .refresh {
-  top: 1vh;
-  left: 37vw;
-} */

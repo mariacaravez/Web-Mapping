@@ -13,9 +13,6 @@ export const baseMapSlice = createSlice({
     lat: 40,
     zoom: 2,
     currentMap: 1,
-    communityName: "",
-    update: false,
-    inputs: false,
   },
   reducers: {
     setLng: (state, action) => {
@@ -29,15 +26,6 @@ export const baseMapSlice = createSlice({
     },
     setCurrentMap: (state, action) => {
       state.currentMap = action.payload.currentMap;
-    },
-    setCommunityName: (state, action) => {
-      state.communityName = action.payload;
-    },
-    updateInfo: (state, action) => {
-      state.update = action.payload.update;
-    },
-    setInputs: (state, action) => {
-      state.inputs = action.payload.inputs;
     },
   },
 });
